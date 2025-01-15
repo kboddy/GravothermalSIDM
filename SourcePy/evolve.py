@@ -510,23 +510,25 @@ class Halo:
 
     def initialize_elastic_scattering(self,model_name):
         """
-        Set appropriate velocity-dependent function f(v) for LMFP or SMFP
+        Set appropriate velocity-dependent function F(v) for LMFP or SMFP
         regime to represent impact of particle physics model for elastic
         scattering on thermal conductivities:
-            kappa_LMFP = 3aC/(8\pi G) * sigma0*f(v)/m_{DM}^2 * rho * v^3
-            kappa_SMFP = (3/2) * b*v / (sigma0 * f(v))
-        The functions f(v) for LMFP and SMFP are assigned to the variables
+            kappa_LMFP = 3aC/(8\pi G) * sigma0*F(v)/m_{DM}^2 * rho * v^3
+            kappa_SMFP = (3/2) * b*v / (sigma0 * F(v))
+        The functions F(v) for LMFP and SMFP are assigned to the variables
         F_elastic_lmfp and F_elastic_smfp.
 
         Model options:
-        'constant': velocity-independent cross section with f(v)=1
-        'powerlaw_n': power-law behavior f(v) = v^n for integer n
-        'YukawaBornViscosityApprox_Kp_orderN':
-            f(v) = average_YukawaBornViscosityApprox(p,N,False)
+        'constant': velocity-independent cross section with F(v)=1
+        'powerlaw_n': power-law behavior F(v) = (v/w)^n for float n
+        'YukawaBornViscosityApprox_Kp_orderN': Yukawa scattering
+            under Born approximation, incorporating t- and u-channel
+            F(v) = average_YukawaBornViscosityApprox(p,N,False)
             p = power-law index for velocity weighting
             N = order of calculation in standard SMFP case
-        'YukawaBornViscosityApproxTchannel_Kp_orderN':
-            f(v) = average_YukawaBornViscosityApprox(p,N,True)
+        'YukawaBornViscosityApproxTchannel_Kp_orderN': Yukawa scattering
+            under Born approximation, incorporating t-channel only
+            F(v) = average_YukawaBornViscosityApprox(p,N,True)
 
         Parameters
         ----------
@@ -537,7 +539,7 @@ class Halo:
 
         Returns
         -------
-        Function f(v).
+        Function F(v).
         """
         if model_name == 'constant':
             output = lambda x: 1.
