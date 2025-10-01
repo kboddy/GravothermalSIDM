@@ -3,7 +3,7 @@ GravothermalSIDM
 
 GravothermalSIDM solves a set of gravothermal fluid equations to obtain the evolution of an isolated spherical halo comprised of self-interacting dark matter.
 
-Author: [Kimberly Boddy](https://sites.cns.utexas.edu/kboddy)
+Author: [Kimberly Boddy](https://kboddy.github.io)
 
 Contributors: Hiroya Nishikawa, [Sophia Gad-Nasr](https://github.com/SophiaNasr?tab=repositories), [Laura Sagunski](https://dmgw.space/)
 
@@ -35,17 +35,17 @@ Getting started
 
 Download the code from GitHub:
 ```console
-$ git clone https://github.com/kboddy/GravothermalSIDM.git
+git clone https://github.com/kboddy/GravothermalSIDM.git
 ```
 
 Install the following Python package dependencies:
 ```console
-$ pip install numpy scipy astropy h5py numba mpmath
+pip install numpy scipy astropy h5py numba mpmath
 ```
 
 As a simple example, run
 ```console
-$ python runHaloEvolution.py
+python runHaloEvolution.py
 ```
 
 The Jupyter notebook `tutorial.ipynb` displays the documentation for the setup and run options.

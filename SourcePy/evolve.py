@@ -539,7 +539,7 @@ class Halo:
         Set appropriate velocity-dependent function F(v) for LMFP or SMFP
         regime to represent impact of particle physics model for elastic
         scattering on thermal conductivities:
-            kappa_LMFP = 3aC/(8\pi G) * sigma0*F(v)/m_{DM}^2 * rho * v^3
+            kappa_LMFP = 3aC/(8 pi G) * sigma0*F(v)/m_{DM}^2 * rho * v^3
             kappa_SMFP = (3/2) * b*v / (sigma0 * F(v))
         The functions F(v) for LMFP and SMFP are assigned to the variables
         F_elastic_lmfp and F_elastic_smfp.
@@ -594,9 +594,9 @@ class Halo:
         # 1d velocity dispersion
         self.v = np.sqrt(self.p/self.rho)
 
-        # effective thermal conductivity, Keff = (2/3) \kappa m_{DM}
-        # heat flux equation: L/(4\pi r^2) = -kappa \frac{\partial T}{\partial r}
-        #                                  = - Keff \frac{\partial u}{\partial r}
+        # effective thermal conductivity, Keff = (2/3) kappa m_{DM}
+        # heat flux equation: L/(4 pi r^2) = -kappa frac{partial T}{partial r}
+        #                                  = - Keff frac{partial u}{partial r}
         self.Kinv_smfp = self.sigma_m * self.F_elastic_smfp(self.v/self.w) / (self.b * self.v)
         self.Kinv_lmfp = 1. / (self.a * self.C * self.v * self.p * self.sigma_m * self.F_elastic_lmfp(self.v/self.w))
         Keff = 1./(self.Kinv_smfp + self.Kinv_lmfp)
