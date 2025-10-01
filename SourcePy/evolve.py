@@ -209,12 +209,12 @@ class Halo:
 
         ##### overwrite halo initialization defaults
         if self.record.has_record: # saved initialization information exists
-            halo_ini_input = self.record.get_halo_initialization()
+            halo_ini_input, original_state = self.record.get_halo_initialization()
             if kwargs!={}:
                 print('Warning: all user input is ignored for initialization (using settings from existing file).')
         else: # no previously saved information exists
-            print('~~~~~ Creating new halo state for {}'.format(self.record.basename))
             halo_ini_input = kwargs
+            original_state = {}
 
         # handle bad user input or backward compatibility issues
         bad_keys = np.setdiff1d(list(halo_ini_input.keys()),list(self.halo_ini.keys()))
@@ -302,11 +302,29 @@ class Halo:
         self.t_relax = (scale_t_relax).to_value(self.scale_t)
 
         ##### either load existing halo save state or create a new one
+        load_success = False
+
+        # attempt to load most recently saved halo state
         if self.record.has_record:
             load_success = self.load_halo(None,time=None,verbose=True)
-        else:
-            # set initial halo radius, mass, density, and pressure profiles
 
+        # otherwise, check for unmodified initial state
+        if not load_success and original_state != {}:
+            for key,value in original_state.items():
+                setattr(self,key,value)
+
+            # store initial density of innermost shell
+            self.rho_center = self.get_central_quantity(self.rho)
+
+            # with necessary quantities initialized, set derived quantities
+            self.update_derived_parameters()
+
+            # print information
+            print('~~~~~ Loaded original initial halo state for {}'.format(self.record.basename))
+            load_success = True
+
+        #  otherwise, set initial halo radius, mass, density, and pressure profiles
+        if not load_success:
             # initial radius, location of outermost edge of each shell
             self.r = np.logspace(np.log10(self.r_min),np.log10(self.r_max),
                                  num=self.n_shells,endpoint=True,base=10)
@@ -343,6 +361,14 @@ class Halo:
         self.delta_uc  = np.empty(self.n_shells, dtype=np.float64) # specific energy change for adjustment
         self.delta_rho = np.empty(self.n_shells, dtype=np.float64) # density change for adjustment
         self.delta_ph  = np.empty(self.n_shells, dtype=np.float64) # pressure change for adjustment
+
+        ##### save initialization file, if needed
+        if not self.record.has_record:
+            save_names = ['m','r','rho','p']
+            original_state = {n: getattr(self,n) for n in save_names}
+
+            print('~~~~~ Creating new halo {}'.format(self.record.basename))
+            self.record.save_halo_initialization(self.halo_ini,original_state)
 
         return
 
@@ -800,8 +826,6 @@ class Halo:
 
         # initialization for new evolution calculation
         if self.t == 0:
-            # save halo initialization file
-            self.record.save_halo_initialization(self.halo_ini)
             # enforce hydrostatic condition initially
             if self.flag_hydrostatic_initial:
                 self.hydrostatic_adjustment()

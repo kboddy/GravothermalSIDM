@@ -37,34 +37,50 @@ class HaloRecord:
 
     def get_halo_initialization(self):
         """
-        Obtain saved halo initialization information.
+        Obtain saved halo initialization information and original halo state.
+        Information about original halo state is limited to profile quantities,
+        so array-like objects are expected.
 
         Returns
         -------
-        Dictionary of saved halo information.
+        Tuple containing dictionary of saved halo information
+        and dictionary of original halo state.
         """
         if not self.has_record:
             raise IOError('No halo initialization file exists.')
 
         with h5py.File(self.path_ini,'r') as hf:
-            data = {key: hf.attrs[key] for key in hf.attrs.keys()}
-        return data
+            data1 = {key: hf.attrs[key] for key in hf.attrs.keys()}
+            if len(hf.keys()) > 0:
+                data2 = {key: hf[key][:] for key in hf.keys()}
+            else:
+                data2 = {} # for backward compatibility
+        return data1, data2
 
-    def save_halo_initialization(self,halo_ini):
+    def save_halo_initialization(self,halo_ini,original_state):
         """
-        Save halo initialization information to file.
+        Save halo initialization information and original halo state to file.
+        Information about original halo state is limited to profile quantities,
+        so array-like objects are expected in `get_halo_initialization()`.
 
         Parameters
         ----------
         halo_ini: dictionary
             Halo initialization dictionary associated with Halo class object.
+
+        original_state: dictionary
+            Original halo state information.
         """
         # create data directory
         os.makedirs(self.dir_data,exist_ok=True)
 
         # save halo initialization file
         with h5py.File(self.path_ini,'w') as hf:
+            # save initialization dictionary
             hf.attrs.update(halo_ini)
+            # save original halo profile parameters
+            for key in original_state.keys():
+                hf.create_dataset(key,data=original_state[key])
 
         # update flag
         self.has_record = True
