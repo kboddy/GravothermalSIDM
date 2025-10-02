@@ -267,3 +267,11 @@ class HaloRecord:
             for n in other_names:
                 hf.create_dataset(n,data=other_table[n])
         return
+
+    def get_archive(self):
+        """
+        Obtain dictionary of arrays of time-evolving halo quantities.
+        """
+        with h5py.File(self.path_archive,'r') as hf:
+            data = {key: hf[key][:] for key in hf.keys()}
+        return data
