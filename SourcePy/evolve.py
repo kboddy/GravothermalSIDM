@@ -264,8 +264,6 @@ class Halo:
         self.w = (self.w_units*ut.km/ut.s).to_value(self.scale_v)
 
         ##### initialize quantities for evolution, saved in snapshot files
-        # this list should coincide with that in save_halo()
-        self.rho_center = 0    # initial density of innermost shell
         self.n_adjustment = 0  # counter for hydrostatic adjustment steps
         self.n_conduction = 0  # counter for heat conduction steps
         self.n_save = 0        # counter for total saved files
@@ -279,6 +277,12 @@ class Halo:
         self.m = None   # total mass enclosed within radii, given by r
         self.rho = None # average density for each shell
         self.p = None   # average pressure for each shell
+
+        # define list of saved quantities (in initialization and snapshot files)
+        self.save_params_init = ['r','m','rho','p']
+        self.save_params_halo = ['r','m','rho','p','t','t_before',
+                                 'n_adjustment','n_conduction','n_save',
+                                 't_epsilon','r_epsilon']
 
         ##### initialize derived quantities (not saved to file, set in update_derived_parameters)
         # generic quantities needed for evolution
@@ -301,6 +305,12 @@ class Halo:
         scale_t_relax = 2./(3. * self.a * self.C * self.sigma_m_with_units*ut.cm**2/ut.g * self.F_elastic_lmfp(1./self.w) * self.scale_v * self.scale_rho)
         self.t_relax = (scale_t_relax).to_value(self.scale_t)
 
+        # initial central density
+        if original_state != {}: # use saved original halo state in initialization file
+            self.rho_center = self.get_central_quantity(original_state['rho'])
+        else:
+            self.rho_center = None
+
         ##### either load existing halo save state or create a new one
         load_success = False
 
@@ -312,9 +322,6 @@ class Halo:
         if not load_success and original_state != {}:
             for key,value in original_state.items():
                 setattr(self,key,value)
-
-            # store initial density of innermost shell
-            self.rho_center = self.get_central_quantity(self.rho)
 
             # with necessary quantities initialized, set derived quantities
             self.update_derived_parameters()
@@ -344,11 +351,11 @@ class Halo:
             self.p = self.get_initial_pressure(r_mid,numeric=False)
             self.p[0] = self.get_initial_pressure(self.r[0],numeric=False)
 
-            # store initial density of innermost shell
-            self.rho_center = self.get_central_quantity(self.rho)
-
             # with necessary quantities initialized, set derived quantities
             self.update_derived_parameters()
+
+            # set initial central density
+            self.rho_center = self.get_central_quantity(self.rho)
 
         ##### initialize arrays needed for evolution (not saved to file)
         self.r_ext = np.empty(self.n_shells+1, dtype=np.float64) # radius array, extended by 1
@@ -364,8 +371,7 @@ class Halo:
 
         ##### save initialization file, if needed
         if not self.record.has_record:
-            save_names = ['m','r','rho','p']
-            original_state = {n: getattr(self,n) for n in save_names}
+            original_state = {n: getattr(self,n) for n in self.save_params_init}
 
             print('~~~~~ Creating new halo {}'.format(self.record.basename))
             self.record.save_halo_initialization(self.halo_ini,original_state)
@@ -441,10 +447,6 @@ class Halo:
             File name prefix for save state of the halo.
             If None, use default prefix defined in `HaloRecord`.
         """
-        # names of variables to save (derived parameters can be recovered)
-        save_names = ['rho_center','n_adjustment','n_conduction','n_save',
-                      't_epsilon','r_epsilon','t','t_before','m','r','rho','p']
-
         # if prefix is None, set it to default
         if prefix is None:
             prefix = self.record.prefix_default
@@ -453,8 +455,8 @@ class Halo:
         if prefix==self.record.prefix_default:
             self.n_save += 1
 
-        # save data
-        data = {n: getattr(self,n) for n in save_names}
+        # save baseline data (derived parameters can be recovered)
+        data = {n: getattr(self,n) for n in self.save_params_halo}
         self.record.save_halo_state_pickled(prefix,self.t,data)
 
         return
