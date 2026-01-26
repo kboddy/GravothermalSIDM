@@ -50,7 +50,15 @@ class HaloRecord:
             raise IOError('No halo initialization file exists.')
 
         with h5py.File(self.path_ini,'r') as hf:
-            data1 = {key: hf.attrs[key] for key in hf.attrs.keys()}
+            # obtain halo initialization dictionary
+            data1 = {}
+            for key in hf.attrs.keys():
+                if isinstance(hf.attrs[key],np.bool):
+                    data1[key] = bool(hf.attrs[key]) # cast into Python bool
+                else:
+                    data1[key] = hf.attrs[key]
+
+            # obtain original halo state
             if len(hf.keys()) > 0:
                 data2 = {key: hf[key][:] for key in hf.keys()}
             else:
